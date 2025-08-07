@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                    String    @id @default(uuid())
+  username              String    @unique
+  email                 String    @unique
+  passwordHash          String
+  role                  String    // user, rescue, admin
+  rescueId              String?
+  rescue                Rescue?   @relation(fields: [rescueId], references: [id])
+  applications          Application[]
+  rescueRequests        RescueRequest[]
+  passwordResetTokenHash String?
+  profileInfo           String?   // JSON stored as string
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  lastLogin             DateTime?
+  auditLogs             AuditLog[]
+}
+
+model Pet {
+  id              String    @id @default(uuid())
+  referenceNumber String    @unique
+  name            String
+  species         String    // capybara, guinea_pig, rock_cavy, chinchilla
+  age             Int
+  size            String    // small, medium, large, extra_large
+  description     String
+  imageUrl        String
+  gallery         String    // Comma-separated URLs
+  rescueId        String
+  rescue          Rescue    @relation(fields: [rescueId], references: [id])
+  applications    Application[]
+  isAdopted       Boolean   @default(false)
+  isPromoted      Boolean   @default(false)
+  dateListed      DateTime  @default(now())
+  internalNotes   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Rescue {
+  id                String    @id @default(uuid())
+  name              String
+  location          String
+  contactEmail      String    @unique
+  description       String
+  websiteUrl        String?
+  logoUrl           String?
+  registrationNumber String?
+  users             User[]
+  pets              Pet[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Application {
+  id          String    @id @default(uuid())
+  petId       String
+  pet         Pet       @relation(fields: [petId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  status      String    // pending, accepted, unsuccessful
+  formData    String    // JSON stored as string
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Transaction {
+  id                    Int       @id @default(autoincrement())
+  promotionId           String?
+  rescueRequestId       String?
+  kind                  String    // sale, refund, fee
+  gateway               String
+  gatewayTransactionId  String    @unique
+  status                String    // pending, success, failure, error
+  amount                Float
+  currency              String    @default("USD")
+  createdAt             DateTime  @default(now())
+  paymentDetails        String?   // JSON stored as string
+}
+
+model RescueRequest {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  requestDate     DateTime  @default(now())
+  status          String    // pending, approved, rejected, payment_pending
+  reason          String
+  rescueName      String
+  rescueLocation  String
+  couponCode      String?
+  requiredFee     Float     @default(0)
+  amountPaid      Float     @default(0)
+  approvalDate    DateTime?
+  adminNotes      String?
+}
+
+model CouponCode {
+  code        String    @id
+  discountType String   // percentage, fixed_amount
+  value       Float
+  isActive    Boolean   @default(true)
+  appliesTo   String    // rescue_fee, promotion
+  maxUses     Int?
+  timesUsed   Int       @default(0)
+  expiryDate  DateTime?
+  createdAt   DateTime  @default(now())
+}
+model AuditLog {
+  id          String    @id @default(uuid())
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  action      String    // login, logout, pet_created, pet_updated, pet_deleted, application_submitted, application_approved, application_rejected, rescue_request_submitted, rescue_request_approved, rescue_request_rejected, user_created, user_updated, user_deleted, admin_action
+  entityType  String?   // user, pet, application, rescue_request, transaction
+  entityId    String?   // ID of the affected entity
+  details     String?   // JSON stored as string with additional details
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
+}
+
+model ScheduledTask {
+  id              String    @id @default(uuid())
+  type            String    // create_temporary_rescue
+  userId          String
+  rescueRequestId String
+  scheduledFor    DateTime
+  executed        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+}

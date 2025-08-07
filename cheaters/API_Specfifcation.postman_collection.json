@@ -1,0 +1,1371 @@
+{
+  "info": {
+    "name": "Vibe Capy Pet Adoption API",
+    "description": "Complete API specification for the Vibe Capy pet adoption platform. This API provides endpoints for user management, pet management, rescue operations, applications, promotions, admin functions, audit logging, scheduled tasks, and coupon management.",
+    "version": "2.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('authToken', response.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Request Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/request-reset",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "request-reset"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset-token-here\",\n  \"password\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "reset-password"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"updatedusername\",\n  \"email\": \"updated@example.com\",\n  \"password\": \"newpassword123\",\n  \"profileInfo\": {\n    \"name\": \"John Doe\",\n    \"job\": \"Software Engineer\",\n    \"age\": 30,\n    \"maritalStatus\": \"single\",\n    \"hobbies\": \"Reading, hiking, cooking\",\n    \"pets\": \"I have experience with dogs and cats\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Users (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=10&search=john",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "john"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me/applications",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me", "applications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Request Rescue Upgrade",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rescueName\": \"Happy Paws Rescue\",\n  \"rescueDescription\": \"A rescue dedicated to finding homes for abandoned pets\",\n  \"location\": \"New York, NY\",\n  \"contactEmail\": \"contact@happypaws.com\",\n  \"contactPhone\": \"+1234567890\",\n  \"website\": \"https://happypaws.com\",\n  \"socialMedia\": \"@happypaws\",\n  \"experience\": \"5 years of pet rescue experience\",\n  \"capacity\": \"Can handle up to 50 pets\",\n  \"facilities\": \"Large facility with outdoor play areas\",\n  \"vetInfo\": \"Partnership with local veterinary clinic\",\n  \"adoptionProcess\": \"Home visit, application review, trial period\",\n  \"additionalInfo\": \"Specialize in senior pets and special needs animals\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/me/request-rescue-upgrade",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me", "request-rescue-upgrade"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pet Management",
+      "item": [
+        {
+          "name": "Get All Pets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pets?page=1&limit=10&search=dog&species=dog&age=2&isAdopted=false&isPromoted=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["pets"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "dog"
+                },
+                {
+                  "key": "species",
+                  "value": "dog"
+                },
+                {
+                  "key": "age",
+                  "value": "2"
+                },
+                {
+                  "key": "isAdopted",
+                  "value": "false"
+                },
+                {
+                  "key": "isPromoted",
+                  "value": "false"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pet by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pets/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["pets", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "pet-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Pet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Buddy\",\n  \"species\": \"dog\",\n  \"breed\": \"Golden Retriever\",\n  \"age\": 3,\n  \"size\": \"large\",\n  \"description\": \"A friendly and energetic dog\",\n  \"imageUrl\": \"http://localhost:9000/uploads/pet-image.jpg\",\n  \"gallery\": [\"http://localhost:9000/uploads/gallery1.jpg\"],\n  \"rescueId\": \"rescue-id-here\",\n  \"internalNotes\": \"Good with children\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pets",
+              "host": ["{{baseUrl}}"],
+              "path": ["pets"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Pet",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Buddy\",\n  \"species\": \"dog\",\n  \"breed\": \"Golden Retriever\",\n  \"age\": 4,\n  \"size\": \"large\",\n  \"description\": \"An updated description\",\n  \"imageUrl\": \"http://localhost:9000/uploads/updated-pet-image.jpg\",\n  \"gallery\": [\"http://localhost:9000/uploads/updated-gallery1.jpg\"],\n  \"rescueId\": \"rescue-id-here\",\n  \"internalNotes\": \"Updated notes\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pets/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["pets", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "pet-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Pet",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pets/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["pets", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "pet-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "Create Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"petId\": \"pet-id-here\",\n  \"formData\": {\n    \"applicantName\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"phone\": \"+1234567890\",\n    \"address\": \"123 Main St, City, State 12345\",\n    \"housingStatus\": \"homeowner\",\n    \"numberOfAdults\": 2,\n    \"numberOfChildren\": 1,\n    \"childrenAges\": \"5\",\n    \"hasOtherPets\": true,\n    \"otherPetsDetails\": \"1 dog, 2 cats\",\n    \"experience\": \"I have experience with dogs and cats\",\n    \"reasonForAdoption\": \"Looking for a companion for my family\",\n    \"timeAtHome\": \"I work from home and can provide constant care\",\n    \"additionalDetails\": \"I have a large backyard perfect for a dog\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/applications",
+              "host": ["{{baseUrl}}"],
+              "path": ["applications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/applications/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["applications", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pet Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/applications/pet/:petId",
+              "host": ["{{baseUrl}}"],
+              "path": ["applications", "pet", ":petId"],
+              "variable": [
+                {
+                  "key": "petId",
+                  "value": "pet-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Application Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"notes\": \"Application approved after home visit\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/applications/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["applications", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "application-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Applications (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/applications?page=1&limit=10&status=pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["applications"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Promotions",
+      "item": [
+        {
+          "name": "Promote Pet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"petId\": \"pet-id-here\",\n  \"promotionType\": \"featured\",\n  \"duration\": 7,\n  \"couponCode\": \"FREEPROMO\",\n  \"skipCardDetails\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/promotions",
+              "host": ["{{baseUrl}}"],
+              "path": ["promotions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/promotions/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["promotions", "transactions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Transactions (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/promotions/transactions/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["promotions", "transactions", "all"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Rescue Management",
+      "item": [
+        {
+          "name": "Get All Rescues",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rescues?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescues"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Rescue by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rescues/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescues", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "rescue-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Rescue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Happy Paws Rescue\",\n  \"description\": \"A rescue dedicated to finding homes for abandoned pets\",\n  \"location\": \"New York, NY\",\n  \"contactEmail\": \"contact@happypaws.com\",\n  \"contactPhone\": \"+1234567890\",\n  \"website\": \"https://happypaws.com\",\n  \"socialMedia\": \"@happypaws\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rescues",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescues"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Rescue",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Happy Paws Rescue\",\n  \"description\": \"Updated description\",\n  \"location\": \"New York, NY\",\n  \"contactEmail\": \"updated@happypaws.com\",\n  \"contactPhone\": \"+1234567890\",\n  \"website\": \"https://updated-happypaws.com\",\n  \"socialMedia\": \"@updatedhappypaws\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rescues/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescues", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "rescue-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Rescue",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rescues/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescues", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "rescue-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Users for Rescue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rescues/available-users",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescues", "available-users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add User to Rescue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user-id-here\",\n  \"rescueId\": \"rescue-id-here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rescues/:rescueId/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescues", ":rescueId", "users"],
+              "variable": [
+                {
+                  "key": "rescueId",
+                  "value": "rescue-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove User from Rescue",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rescues/:rescueId/users/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescues", ":rescueId", "users", ":userId"],
+              "variable": [
+                {
+                  "key": "rescueId",
+                  "value": "rescue-id-here"
+                },
+                {
+                  "key": "userId",
+                  "value": "user-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Rescue Requests",
+      "item": [
+        {
+          "name": "Get All Rescue Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rescue-requests?page=1&limit=10&status=pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescue-requests"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Rescue Request by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rescue-requests/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescue-requests", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "request-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Rescue Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"notes\": \"Rescue request approved after review\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rescue-requests/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescue-requests", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "request-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Rescue Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"rejected\",\n  \"notes\": \"Rescue request rejected due to insufficient information\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rescue-requests/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["rescue-requests", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "request-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Scheduled Tasks",
+      "item": [
+        {
+          "name": "Force Process Scheduler",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/scheduler/force-process",
+              "host": ["{{baseUrl}}"],
+              "path": ["scheduler", "force-process"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Management",
+      "item": [
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users?page=1&limit=10&search=john&role=user",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "john"
+                },
+                {
+                  "key": "role",
+                  "value": "user"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"updatedusername\",\n  \"email\": \"updated@example.com\",\n  \"role\": \"rescue\",\n  \"rescueId\": \"rescue-id-here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Rescues (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/rescues?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "rescues"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Rescue (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin Created Rescue\",\n  \"description\": \"A rescue created by admin\",\n  \"location\": \"Los Angeles, CA\",\n  \"contactEmail\": \"admin@rescue.com\",\n  \"contactPhone\": \"+1234567890\",\n  \"website\": \"https://adminrescue.com\",\n  \"socialMedia\": \"@adminrescue\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/rescues",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "rescues"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Rescue (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Admin Rescue\",\n  \"description\": \"Updated description\",\n  \"location\": \"Los Angeles, CA\",\n  \"contactEmail\": \"updated@adminrescue.com\",\n  \"contactPhone\": \"+1234567890\",\n  \"website\": \"https://updated-adminrescue.com\",\n  \"socialMedia\": \"@updatedadminrescue\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/rescues/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "rescues", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "rescue-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Rescue (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/rescues/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "rescues", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "rescue-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Pets (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pets?page=1&limit=10&species=dog&isAdopted=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "pets"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "species",
+                  "value": "dog"
+                },
+                {
+                  "key": "isAdopted",
+                  "value": "false"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Applications (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/applications?page=1&limit=10&status=pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "applications"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Transactions (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/transactions?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "transactions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Rescue Requests (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/rescue-requests?page=1&limit=10&status=pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "rescue-requests"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/logs?page=1&limit=10&action=user_created&userId=user-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "logs"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "action",
+                  "value": "user_created"
+                },
+                {
+                  "key": "userId",
+                  "value": "user-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+} 
+ 
+ 
