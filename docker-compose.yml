@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Database (SQLite for development)
+  database:
+    image: alpine:latest
+    volumes:
+      - ./server/prisma/dev.db:/app/dev.db
+    command: sh -c "echo 'Database volume mounted' && tail -f /dev/null"
+
+  # Backend API Server
+  backend:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - JWT_SECRET=your-super-secret-jwt-key-dev
+      - DATABASE_URL=file:/app/prisma/dev.db
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - ./server/prisma:/app/prisma
+    depends_on:
+      - database
+    command: sh -c "npx prisma migrate dev --name init && npm run dev"
+
+  # Frontend React App
+  frontend:
+    build: 
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "5174:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    command: sh -c "npm run dev -- --host 0.0.0.0"
+
+  # Local S3 Service for file uploads
+  s3:
+    build: 
+      context: ./local-s3
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./local-s3/uploads:/app/uploads
+    environment:
+      - NODE_ENV=development
+
+networks:
+  default:
+    name: vibe-capy-network
