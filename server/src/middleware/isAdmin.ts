@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { User } from '@prisma/client';
 import { JwtPayload } from 'jsonwebtoken';
+import { sendUnauthorized, sendForbidden } from '../utils/responseHelper';
 
 // Extend Express Request type to include user
 declare global {
@@ -13,17 +14,11 @@ declare global {
 
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: 'Authentication required'
-    });
+    return sendUnauthorized(res, 'Authentication required');
   }
 
   if (req.user.role !== 'admin') {
-    return res.status(403).json({
-      success: false,
-      message: 'Admin access required'
-    });
+    return sendForbidden(res, 'Admin access required');
   }
 
   next();

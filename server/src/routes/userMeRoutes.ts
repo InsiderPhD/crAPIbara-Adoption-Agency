@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
+import { accessControl } from '../middleware/accessControl';
 import {
   getUserProfile,
   updateUserProfile,
@@ -11,7 +12,7 @@ import {
 const router = Router();
 
 // All user routes require authentication
-router.use(authenticate);
+router.use(authenticate, accessControl.authenticated);
 
 // User profile management
 router.get('/me', getUserProfile);

@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { AuditService } from '../services/auditService';
+import { sendSuccess, sendBadRequest, sendUnauthorized, sendNotFound, sendInternalError } from '../utils/responseHelper';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -19,27 +20,18 @@ export const register = async (req: Request, res: Response) => {
 
     // Validate required fields
     if (!username || !email || !password || !role) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields'
-      });
+      return sendBadRequest(res, 'Missing required fields');
     }
 
     // Validate role
     const validRoles = ['user', 'rescue', 'admin'];
     if (!validRoles.includes(role)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid role'
-      });
+      return sendBadRequest(res, 'Invalid role');
     }
 
     // Check if rescueId is provided for rescue role
     if (role === 'rescue' && !rescueId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Rescue ID is required for rescue role'
-      });
+      return sendBadRequest(res, 'Rescue ID is required for rescue role');
     }
 
     // Check if username or email already exists
@@ -53,10 +45,7 @@ export const register = async (req: Request, res: Response) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'Username or email already exists'
-      });
+      return sendBadRequest(res, 'Username or email already exists');
     }
 
     // Hash password
@@ -90,23 +79,17 @@ export const register = async (req: Request, res: Response) => {
     // Generate token
     const token = generateToken(user.id, user.role);
 
-    res.status(201).json({
-      success: true,
-      data: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        rescueId: user.rescueId,
-        token
-      }
-    });
+    sendSuccess(res, {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      rescueId: user.rescueId,
+      token
+    }, 201);
   } catch (error) {
     console.error('Error in register:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
+    sendInternalError(res, 'Internal server error');
   }
 };
 
@@ -117,10 +100,7 @@ export const login = async (req: Request, res: Response) => {
 
     // Validate required fields
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email and password are required'
-      });
+      return sendBadRequest(res, 'Email and password are required');
     }
 
     // Find user
@@ -129,19 +109,13 @@ export const login = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return sendUnauthorized(res, 'Invalid credentials');
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return sendUnauthorized(res, 'Invalid credentials');
     }
 
     // Update last login
@@ -156,23 +130,17 @@ export const login = async (req: Request, res: Response) => {
     // Generate token
     const token = generateToken(user.id, user.role);
 
-    res.json({
-      success: true,
-      data: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        rescueId: user.rescueId,
-        token
-      }
+    sendSuccess(res, {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      rescueId: user.rescueId,
+      token
     });
   } catch (error) {
     console.error('Error in login:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
+    sendInternalError(res, 'Internal server error');
   }
 };
 
@@ -181,7 +149,7 @@ export const getProfile = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.userId;
     if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return sendUnauthorized(res, 'Unauthorized');
     }
 
     const user = await prisma.user.findUnique({
@@ -199,13 +167,13 @@ export const getProfile = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendNotFound(res, 'User not found');
     }
 
-    res.json({ data: user });
+    sendSuccess(res, user);
   } catch (error) {
     console.error('Error in getProfile:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    sendInternalError(res, 'Internal server error');
   }
 };
 
@@ -232,10 +200,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       });
 
       if (conflictUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'Username or email already exists'
-        });
+        return sendBadRequest(res, 'Username or email already exists');
       }
     }
 
@@ -256,7 +221,7 @@ export const updateProfile = async (req: Request, res: Response) => {
     });
 
     if (!currentUser) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendNotFound(res, 'User not found');
     }
 
     // Handle password change if provided
@@ -264,10 +229,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       // Verify current password
       const isValidPassword = await bcrypt.compare(currentPassword, currentUser.passwordHash);
       if (!isValidPassword) {
-        return res.status(400).json({
-          success: false,
-          message: 'Current password is incorrect'
-        });
+        return sendBadRequest(res, 'Current password is incorrect');
       }
 
       // Hash new password
@@ -315,10 +277,7 @@ export const updateProfile = async (req: Request, res: Response) => {
         req.get('User-Agent')
       );
 
-      res.json({
-        success: true,
-        data: updatedUser,
-      });
+      sendSuccess(res, updatedUser);
     } else {
       // No password change, just update other fields
       const updatedUser = await prisma.user.update({
@@ -350,14 +309,93 @@ export const updateProfile = async (req: Request, res: Response) => {
         req.get('User-Agent')
       );
 
-    res.json({
-      success: true,
-      data: updatedUser,
-    });
+    sendSuccess(res, updatedUser);
     }
   } catch (error) {
     console.error('Error in updateProfile:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    sendInternalError(res, 'Internal server error');
+  }
+};
+
+// VULNERABLE: Mass Assignment - Allows users to modify restricted fields like role and password
+export const updateProfileVulnerable = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // VULNERABILITY: Mass Assignment - Accepts all fields from request body without validation
+    const { username, email, profileInfo, currentPassword, newPassword, role, rescueId } = req.body;
+
+    // Get current user data
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        rescueId: true,
+        profileInfo: true,
+        passwordHash: true,
+        createdAt: true,
+        lastLogin: true,
+      },
+    });
+
+    if (!currentUser) {
+      return sendNotFound(res, 'User not found');
+    }
+
+    // VULNERABILITY: No validation on role changes - users can escalate privileges
+    // VULNERABILITY: No password verification for role changes
+    const updateData: any = {};
+    
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    if (profileInfo) updateData.profileInfo = JSON.stringify(profileInfo);
+    if (role) updateData.role = role; // VULNERABILITY: Role can be changed without authorization
+    if (rescueId) updateData.rescueId = rescueId; // VULNERABILITY: RescueId can be changed
+
+    // Handle password change if provided
+    if (newPassword) {
+      // VULNERABILITY: No current password verification required
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(newPassword, salt);
+      updateData.passwordHash = passwordHash;
+    }
+
+    // Update user with all provided data
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        rescueId: true,
+        profileInfo: true,
+        createdAt: true,
+        lastLogin: true,
+      },
+    });
+
+    // Log profile update
+    await AuditService.logUserUpdated(
+      userId, 
+      userId, 
+      updatedUser.username, 
+      { username, email, profileInfo, role, rescueId, passwordChanged: !!newPassword }, 
+      req.ip, 
+      req.get('User-Agent')
+    );
+
+    sendSuccess(res, updatedUser);
+  } catch (error) {
+    console.error('Error in updateProfileVulnerable:', error);
+    sendInternalError(res, 'Internal server error');
   }
 };
 
@@ -376,7 +414,7 @@ export const getUserApplications = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.userId;
     if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return sendUnauthorized(res, 'Unauthorized');
     }
 
     const page = parseInt(req.query.page as string) || 1;
@@ -408,8 +446,7 @@ export const getUserApplications = async (req: Request, res: Response) => {
 
     const totalPages = Math.ceil(total / limit);
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       data: applications,
       pagination: {
         total,
@@ -422,7 +459,7 @@ export const getUserApplications = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error in getUserApplications:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    sendInternalError(res, 'Internal server error');
   }
 };
 

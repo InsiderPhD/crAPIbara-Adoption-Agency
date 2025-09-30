@@ -75,9 +75,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const response = await axios.get(`${API_URL}/users/profile`);
           console.log('AuthContext: Profile response received');
           console.log('AuthContext: Profile response:', response.data);
-          // The user profile endpoint returns {data: user} without a success property
-          if (response.data.data) {
-            const { id, username, email, role, rescueId } = response.data.data;
+          // The user profile endpoint returns data directly with standardized API
+          if (response.data) {
+            const { id, username, email, role, rescueId } = response.data;
             console.log('AuthContext: Setting user from profile:', { id, username, email, role, rescueId });
             setUser({
               id,

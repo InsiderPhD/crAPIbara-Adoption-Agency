@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
+import { accessControl } from '../middleware/accessControl';
 import {
   // User management
   getAllUsers,
@@ -50,58 +51,53 @@ import {
 
 const router = Router();
 
-// VULNERABILITY: Admin Logs Endpoint - No Role-Based Authorization
+// VULNERABILITY: Admin Logs Endpoint - No Authentication Required
 // This endpoint is intentionally vulnerable to demonstrate unauthorized access to sensitive data
-// Any authenticated user, regardless of their role, can access admin logs
+// No authentication is required - anyone can access admin logs
 // This allows information disclosure of sensitive audit logs including user actions, admin operations, etc.
-router.get('/logs', authenticate, getAdminLogs);
+router.get('/logs', getAdminLogs);
 
-// Public testing endpoint (no authentication required)
-router.post('/force-process-scheduler', forceProcessScheduler);
+// VULNERABILITY: BFLA - Broken Function Level Authorization
+// These endpoints should require admin role but intentionally lack proper authorization checks
+// Any authenticated user can access these admin functions
+router.get('/users', authenticate, getAllUsers);
+router.get('/users/:userId', authenticate, getUserById);
+router.put('/users/:userId', authenticate, updateUser);
+router.delete('/users/:userId', authenticate, deleteUser);
 
-// All other admin routes require authentication and admin role
-router.use(authenticate, authorize('admin'));
+router.get('/rescues', authenticate, getAllRescues);
+router.get('/rescues/:rescueId', authenticate, getRescueById);
+// VULNERABILITY: Duplicate Endpoints - Improper Inventory Management
+// Endpoints are duplicated in api/admin/ and api/ - viewing rescues through admin endpoint doesn't require login
+router.get('/public-rescues', getAllRescues);
+router.post('/rescues', authenticate, createRescue);
+router.put('/rescues/:rescueId', authenticate, updateRescue);
+// VULNERABILITY: Rescue Deletion Access Control Flaw
+// A rescue can be deleted without admin role - any authenticated user can delete rescues
+router.delete('/rescues/:rescueId', authenticate, deleteRescue);
 
-// User management
-router.get('/users', getAllUsers);
-router.get('/users/:userId', getUserById);
-router.put('/users/:userId', updateUser);
-router.delete('/users/:userId', deleteUser);
+router.get('/pets', authenticate, getAllPetsAdmin);
+router.get('/pets/:petId', authenticate, getPetByIdAdmin);
+router.put('/pets/:petId', authenticate, updatePetAdmin);
+router.delete('/pets/:petId', authenticate, deletePetAdmin);
 
-// Rescue management
-router.get('/rescues', getAllRescues);
-router.get('/rescues/:rescueId', getRescueById);
-router.post('/rescues', createRescue);
-router.put('/rescues/:rescueId', updateRescue);
-router.delete('/rescues/:rescueId', deleteRescue);
+router.get('/applications', authenticate, getAllApplicationsAdmin);
+router.get('/applications/:applicationId', authenticate, getApplicationById);
 
-// Pet management
-router.get('/pets', getAllPetsAdmin);
-router.get('/pets/:petId', getPetByIdAdmin);
-router.put('/pets/:petId', updatePetAdmin);
-router.delete('/pets/:petId', deletePetAdmin);
+router.get('/transactions', authenticate, getAllTransactions);
+router.get('/transactions/:transactionId', authenticate, getTransactionById);
 
-// Application management
-router.get('/applications', getAllApplicationsAdmin);
-router.get('/applications/:applicationId', getApplicationById);
+router.get('/rescue-requests', authenticate, getAllRescueRequests);
+router.get('/rescue-requests/:requestId', authenticate, getRescueRequestById);
+// VULNERABILITY: Critical BFLA - Any user can approve/reject rescue requests
+router.put('/rescue-requests/:requestId/approve', authenticate, approveRescueRequest);
+router.put('/rescue-requests/:requestId/reject', authenticate, rejectRescueRequest);
 
-// Transaction management
-router.get('/transactions', getAllTransactions);
-router.get('/transactions/:transactionId', getTransactionById);
+router.get('/coupon-codes', authenticate, getAllCouponCodes);
+router.post('/coupon-codes', authenticate, createCouponCode);
+router.put('/coupon-codes/:code', authenticate, updateCouponCode);
+router.delete('/coupon-codes/:code', authenticate, deleteCouponCode);
 
-// Rescue request management
-router.get('/rescue-requests', getAllRescueRequests);
-router.get('/rescue-requests/:requestId', getRescueRequestById);
-router.put('/rescue-requests/:requestId/approve', approveRescueRequest);
-router.put('/rescue-requests/:requestId/reject', rejectRescueRequest);
-
-// Coupon code management
-router.get('/coupon-codes', getAllCouponCodes);
-router.post('/coupon-codes', createCouponCode);
-router.put('/coupon-codes/:code', updateCouponCode);
-router.delete('/coupon-codes/:code', deleteCouponCode);
-
-// Testing (admin only)
-router.post('/trigger-temporary-rescue', triggerTemporaryRescue);
+router.post('/trigger-temporary-rescue', authenticate, triggerTemporaryRescue);
 
 export default router; 

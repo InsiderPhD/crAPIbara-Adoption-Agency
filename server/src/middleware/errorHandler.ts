@@ -23,8 +23,9 @@ export const errorHandler = (
 ) => {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
+      result: "error",
+      error_code: err.statusCode,
+      error_message: err.message,
     });
   }
 
@@ -33,7 +34,8 @@ export const errorHandler = (
 
   // Send generic error for unexpected errors
   return res.status(500).json({
-    status: 'error',
-    message: 'Something went wrong',
+    result: "error",
+    error_code: 500,
+    error_message: "Something went wrong",
   });
 }; 

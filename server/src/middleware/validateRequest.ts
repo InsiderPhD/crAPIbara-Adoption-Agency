@@ -21,8 +21,9 @@ export const validateRequest = (schema: {
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json({
-          message: 'Validation error',
-          errors: error.errors,
+          result: "error",
+          error_code: 400,
+          error_message: 'Validation error',
         });
       }
       next(error);

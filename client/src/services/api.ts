@@ -42,6 +42,14 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
+    
+    // Handle standardized error responses
+    if (error.response?.data?.result === 'error') {
+      // Extract error message from standardized format
+      const errorMessage = error.response.data.error_message || 'An error occurred';
+      error.message = errorMessage;
+    }
+    
     return Promise.reject(error);
   }
 );
