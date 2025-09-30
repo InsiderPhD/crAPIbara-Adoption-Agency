@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 import { API_BASE_URL, API_URL } from '../config/api';
@@ -42,7 +42,7 @@ export default function ViewApplications() {
   const { data: applications, isLoading, error } = useQuery({
     queryKey: ['applications', id],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_URL}/applications/pet/${id}`);
+      const { data } = await api.get(`/applications/pet/${id}`);
       return data.data;
     },
   });

@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
+import { accessControl } from '../middleware/accessControl';
 import {
   // Rescue profile management
   getRescueProfile,
@@ -31,7 +32,7 @@ import {
 const router = Router();
 
 // All rescue routes require authentication and rescue role
-router.use(authenticate, authorize('rescue'));
+router.use(authenticate, accessControl.rescueOnly);
 
 // Rescue profile management
 router.get('/', getRescueProfile);

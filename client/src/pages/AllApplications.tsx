@@ -27,7 +27,7 @@ import {
 } from '@mui/material';
 import { Delete as DeleteIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 import { API_BASE_URL, API_URL } from '../config/api';
@@ -100,14 +100,14 @@ export default function AllApplications() {
   const { data: applications, isLoading } = useQuery({
     queryKey: ['applications'],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_URL}/applications`);
+      const { data } = await api.get('/applications');
       return data.data;
     },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      await axios.patch(`${API_URL}/applications/${id}/status`, { status });
+      await api.patch(`/applications/${id}/status`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
@@ -122,7 +122,7 @@ export default function AllApplications() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`${API_URL}/applications/${id}`);
+      await api.delete(`/applications/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });

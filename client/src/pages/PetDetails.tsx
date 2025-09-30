@@ -50,7 +50,7 @@ import {
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../services/api';
 import { API_URL } from '../config/api';
 import type { Pet as PetType } from '../hooks/usePets';
 import { usePetsByRescue } from '../hooks/usePetsByRescue';
@@ -160,13 +160,14 @@ export default function PetDetails() {
     queryKey: ['pet', id],
     queryFn: async () => {
       try {
-        const { data } = await axios.get(`${API_URL}/pets/${id}`);
+        const { data } = await api.get(`/pets/${id}`);
         return data.data as PetWithRescueLogo;
       } catch (error) {
         console.error('Error fetching pet:', error);
         throw error;
       }
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes - pet details don't change often
   });
 
   // Get applications count
@@ -174,7 +175,7 @@ export default function PetDetails() {
     queryKey: ['applications', id],
     queryFn: async () => {
       try {
-        const { data } = await axios.get(`${API_URL}/applications/pet/${id}`);
+        const { data } = await api.get(`/applications/pet/${id}`);
         return data.data;
       } catch (error) {
         console.error('Error fetching applications:', error);
@@ -182,6 +183,7 @@ export default function PetDetails() {
       }
     },
     enabled: canViewInternalNotes(),
+    staleTime: 30 * 1000, // 30 seconds - applications can change frequently
   });
 
   // Get other pets from the same rescue
@@ -613,9 +615,19 @@ export default function PetDetails() {
               <Typography variant="h6" gutterBottom>
                 About {pet.name}
               </Typography>
-              <Typography paragraph>
-                {pet.description}
-              </Typography>
+              {/* VULNERABILITY: Stored XSS - Pet description is rendered as HTML without sanitization */}
+              <Typography 
+                paragraph
+                dangerouslySetInnerHTML={{ __html: pet.description }}
+                sx={{
+                  '& *': {
+                    fontSize: 'inherit',
+                    fontFamily: 'inherit',
+                    lineHeight: 'inherit',
+                    color: 'inherit',
+                  }
+                }}
+              />
 
               {canViewInternalNotes() && (
                 <>

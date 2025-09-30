@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { authenticate } from '../middleware/auth';
+import { accessControl } from '../middleware/accessControl';
 import {
   listRescues,
   getRescue,
@@ -11,25 +13,21 @@ import {
 
 const router = Router();
 
-// GET /api/v1/rescues
+// Public routes (no authentication required)
 router.get('/', listRescues);
-
-// GET /api/v1/rescues/:id
 router.get('/:id', getRescue);
 
-// POST /api/v1/rescues
-router.post('/', createRescue);
+// Admin-only routes
+router.post('/', authenticate, accessControl.adminOnly, createRescue);
+router.put('/:id', authenticate, accessControl.adminOnly, updateRescue);
+router.delete('/:id', authenticate, accessControl.adminOnly, deleteRescue);
 
-// PUT /api/v1/rescues/:id
-router.put('/:id', updateRescue);
+// VULNERABILITY: IDOR - Intentionally broken path using rescueId in URL without proper ownership checks
+// This allows rescue users to access/modify other rescues' profiles by changing the rescueId in the URL
+router.put('/:rescueId', authenticate, accessControl.rescueOnly, updateRescue);
 
-// GET /api/v1/rescues/users/available
-router.get('/users/available', getAllUsersForRescue);
-
-// POST /api/v1/rescues/:rescueId/users/:userId
-router.post('/:rescueId/users/:userId', addUserToRescue);
-
-// DELETE /api/v1/rescues/:id
-router.delete('/:id', deleteRescue);
+// Admin-only user management
+router.get('/users/available', authenticate, accessControl.adminOnly, getAllUsersForRescue);
+router.post('/:rescueId/users/:userId', authenticate, accessControl.adminOnly, addUserToRescue);
 
 export default router; 

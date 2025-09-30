@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
+import { accessControl } from '../middleware/accessControl';
 import {
   getAllPets,
   getPetById,
@@ -10,19 +11,24 @@ import {
 
 const router = Router();
 
-// GET /api/v1/pets - Get all pets
+// Public routes (no authentication required)
 router.get('/', getAllPets);
-
-// GET /api/v1/pets/:id - Get a single pet by ID
 router.get('/:id', getPetById);
 
-// POST /api/v1/pets - Create a new pet
-router.post('/', authenticate, authorize('admin', 'rescue'), createPet);
+// Admin or rescue routes
+router.post('/', authenticate, accessControl.rescueOrOwnRescue, createPet);
+router.put('/:id', authenticate, accessControl.rescueOrOwnRescue, updatePet);
+router.delete('/:id', authenticate, accessControl.rescueOrOwnRescue, deletePet);
 
-// PUT /api/v1/pets/:id - Update a pet
-router.put('/:id', authenticate, authorize('admin', 'rescue'), updatePet);
+// VULNERABILITY: Pet Creation/Modification Access Control Flaw
+// Any rescue can create pets, but pets can only be modified by the rescue that owns them
+// However, the ownership check is flawed - any rescue can modify any pet
+router.post('/rescue', authenticate, accessControl.rescueOnly, createPet);
+router.put('/rescue/:id', authenticate, accessControl.rescueOnly, updatePet);
 
-// DELETE /api/v1/pets/:id - Delete a pet
-router.delete('/:id', authenticate, authorize('admin', 'rescue'), deletePet);
+// VULNERABILITY: Missing Rate Limiting - Pet application endpoint lacks rate limiting
+// This endpoint allows users to apply for pets but has no rate limiting implemented
+// Despite documentation implying rate limiting exists, this allows application spam
+router.post('/:petId/apply', authenticate, accessControl.authenticated, createPet);
 
 export default router; 

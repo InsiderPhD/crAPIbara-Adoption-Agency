@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { sendUnauthorized, sendForbidden } from '../utils/responseHelper';
 
 // VULNERABILITY: JWT Signature Verification Bypass
 // This middleware intentionally skips JWT signature verification to demonstrate
@@ -33,10 +34,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'No token provided'
-      });
+      return sendUnauthorized(res, 'No token provided');
     }
 
     const token = authHeader.split(' ')[1];
@@ -49,10 +47,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     const decoded = jwt.decode(token) as JwtPayload;
     
     if (!decoded) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid token format'
-      });
+      return sendUnauthorized(res, 'Invalid token format');
     }
 
     // VULNERABILITY: Trust the decoded payload without signature verification
@@ -63,10 +58,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     });
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'User no longer exists'
-      });
+      return sendUnauthorized(res, 'User no longer exists');
     }
 
     // VULNERABILITY: Use the role from the decoded JWT instead of the database
@@ -79,27 +71,18 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     };
     next();
   } catch (error) {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid token'
-    });
+    return sendUnauthorized(res, 'Invalid token');
   }
 };
 
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required'
-      });
+      return sendUnauthorized(res, 'Authentication required');
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Insufficient permissions'
-      });
+      return sendForbidden(res, 'Insufficient permissions');
     }
 
     next();

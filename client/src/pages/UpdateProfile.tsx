@@ -58,17 +58,17 @@ export default function UpdateProfile() {
           }
         });
         
-        if (response.data.success && response.data.data) {
+        if (response.data) {
           // Set username and email from backend
           setFormData(prev => ({
             ...prev,
-            username: response.data.data.username || '',
-            email: response.data.data.email || '',
+            username: response.data.username || '',
+            email: response.data.email || '',
           }));
           // Set profileInfo from backend
-          if (response.data.data.profileInfo) {
+          if (response.data.profileInfo) {
             try {
-              const parsedProfileInfo = JSON.parse(response.data.data.profileInfo);
+              const parsedProfileInfo = JSON.parse(response.data.profileInfo);
               setProfileInfo({
                 name: parsedProfileInfo.name || '',
                 job: parsedProfileInfo.job || '',
@@ -144,7 +144,7 @@ export default function UpdateProfile() {
         profileInfo: profileInfo,
       });
 
-      if (response.data.success) {
+      if (response.data) {
         setSuccess('Profile updated successfully');
         // Update user context with new data
         setUser({

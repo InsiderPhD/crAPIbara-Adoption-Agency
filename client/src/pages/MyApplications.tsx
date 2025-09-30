@@ -26,7 +26,7 @@ import {
   Snackbar,
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
 
@@ -120,38 +120,23 @@ export default function MyApplications() {
   const { data: applications, isLoading, error } = useQuery({
     queryKey: ['my-applications'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      const { data } = await axios.get(`${API_URL}/applications/my-applications`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const { data } = await api.get('/applications/my-applications');
       console.log('Applications data:', data.data);
       return data.data;
     },
+    staleTime: 1 * 60 * 1000, // 1 minute - applications can change more frequently
   });
 
-  // Fetch pet details for each application
+  // Fetch pet details for each application - optimized to reduce API calls
   const { data: petsData } = useQuery({
     queryKey: ['pets', applications?.map((app: Application) => app.petId)],
     queryFn: async () => {
       if (!applications?.length) return {};
       
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
+      // Use Promise.allSettled to handle individual failures gracefully
       const petPromises = applications.map(async (app: Application) => {
         try {
-          const { data } = await axios.get(`${API_URL}/pets/${app.petId}`, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
+          const { data } = await api.get(`/pets/${app.petId}`);
           return [app.petId, data.data];
         } catch (error) {
           console.error(`Error fetching pet ${app.petId}:`, error);
@@ -159,30 +144,23 @@ export default function MyApplications() {
         }
       });
 
-      const results = await Promise.all(petPromises);
-      return Object.fromEntries(results);
+      const results = await Promise.allSettled(petPromises);
+      const successfulResults = results
+        .filter((result): result is PromiseFulfilledResult<[string, any]> => result.status === 'fulfilled')
+        .map(result => result.value);
+      
+      return Object.fromEntries(successfulResults);
     },
     enabled: !!applications?.length,
+    staleTime: 2 * 60 * 1000, // 2 minutes - pets don't change often
   });
 
   const updateApplicationMutation = useMutation({
     mutationFn: async ({ applicationId, details }: { applicationId: number; details: string }) => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      const response = await axios.patch(
-        `${API_URL}/applications/${applicationId}`,
-        {
-          additionalDetails: details
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      return response.data;
+      const { data } = await api.patch(`/applications/${applicationId}`, {
+        additionalDetails: details
+      });
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-applications'] });

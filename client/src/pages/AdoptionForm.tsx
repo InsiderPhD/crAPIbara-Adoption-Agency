@@ -17,6 +17,8 @@ import {
   CardContent,
   CardMedia,
   Chip,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

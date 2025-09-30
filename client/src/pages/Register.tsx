@@ -42,29 +42,30 @@ export default function Register() {
 
     try {
       const response = await axios.post(`${API_URL}/users/register`, formData);
-      if (response.data.success) {
-        const { data: { token, id, username, email, role, rescueId } } = response.data;
+      // With standardized API, successful responses return data directly
+      const { token, id, username, email, role, rescueId } = response.data;
         
-        // Store the token in localStorage and axios defaults
-        localStorage.setItem('token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        // Set the user data in the context
-        setUser({
-          id,
-          username,
-          email,
-          role,
-          rescueId
-        });
-        
-        // Add a small delay to ensure the user state is set before navigation
-        setTimeout(() => {
+      // Store the token in localStorage and axios defaults
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Set the user data in the context
+      setUser({
+        id,
+        username,
+        email,
+        role,
+        rescueId
+      });
+      
+      // Add a small delay to ensure the user state is set before navigation
+      setTimeout(() => {
         navigate('/');
-        }, 500);
-      }
+      }, 500);
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Registration failed. Please try again.');
+      // Handle standardized error responses
+      const errorMessage = error.response?.data?.error_message || error.response?.data?.message || 'Registration failed. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

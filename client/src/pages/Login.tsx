@@ -55,34 +55,35 @@ export default function Login() {
       const response = await axios.post(`${API_URL}/users/login`, formData);
       console.log('Login response:', response.data);
       
-      if (response.data.success) {
-        const { data: { token, id, username, email, role, rescueId } } = response.data;
+      // With standardized API, successful responses return data directly
+      const { token, id, username, email, role, rescueId } = response.data;
         
-        // Set the token in localStorage and axios defaults
-        localStorage.setItem('token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        // Set the user data in the context
-        console.log('Setting user in context:', { id, username, email, role, rescueId });
-        setUser({
-          id,
-          username,
-          email,
-          role,
-          rescueId // Include rescueId from the response
-        });
-        
-        // Add a small delay to ensure the user state is set before navigation
-        setTimeout(() => {
-          console.log('Navigating to home page');
-          console.log('Final user state before navigation:', { id, username, email, role, rescueId });
+      // Set the token in localStorage and axios defaults
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Set the user data in the context
+      console.log('Setting user in context:', { id, username, email, role, rescueId });
+      setUser({
+        id,
+        username,
+        email,
+        role,
+        rescueId // Include rescueId from the response
+      });
+      
+      // Add a small delay to ensure the user state is set before navigation
+      setTimeout(() => {
+        console.log('Navigating to home page');
+        console.log('Final user state before navigation:', { id, username, email, role, rescueId });
         navigate('/');
-        }, 500); // Increased delay to ensure state is set
-      }
+      }, 500); // Increased delay to ensure state is set
     } catch (err: any) {
       console.error('Login error:', err);
       console.error('Error response:', err.response?.data);
-      setError(err.response?.data?.message || 'An error occurred during login. Please check your credentials and try again.');
+      // Handle standardized error responses
+      const errorMessage = err.response?.data?.error_message || err.response?.data?.message || 'An error occurred during login. Please check your credentials and try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
