@@ -156,10 +156,6 @@ export const getAllApplications = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    if (user.role !== 'admin' && user.role !== 'rescue') {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-
     let applications;
     if (user.role === 'admin') {
       // Admin can see all applications
@@ -185,7 +181,7 @@ export const getAllApplications = async (req: AuthRequest, res: Response) => {
           createdAt: 'desc',
         },
       });
-    } else {
+    } else if (user.role === 'rescue') {
       // Rescue users can only see applications for their pets
       applications = await prisma.application.findMany({
         where: {
@@ -193,6 +189,31 @@ export const getAllApplications = async (req: AuthRequest, res: Response) => {
             rescueId: user.rescueId || '',
           },
         },
+        include: {
+          pet: {
+            include: {
+              rescue: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          user: {
+            select: {
+              email: true,
+              profileInfo: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+    } else {
+      // Regular users: only their own applications
+      applications = await prisma.application.findMany({
+        where: { userId: user.userId },
         include: {
           pet: {
             include: {

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { AuditService } from './auditService';
+import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -178,7 +179,7 @@ export class SchedulerService {
       
       await prisma.$executeRaw`
         INSERT INTO "ScheduledTask" ("id", "type", "userId", "rescueRequestId", "scheduledFor", "executed", "createdAt")
-        VALUES (${crypto.randomUUID()}, 'create_temporary_rescue', ${userId}, ${rescueRequestId}, ${scheduledFor}, false, ${new Date()})
+        VALUES (${randomUUID()}, 'create_temporary_rescue', ${userId}, ${rescueRequestId}, ${scheduledFor}, false, ${new Date()})
       `;
 
       console.log(`Scheduled temporary rescue creation for user ${userId} at ${scheduledFor}`);

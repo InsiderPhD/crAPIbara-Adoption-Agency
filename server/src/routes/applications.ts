@@ -21,8 +21,8 @@ router.post('/', authenticate, accessControl.authenticated, createApplication);
 // This allows attackers to spam applications and overwhelm rescues
 router.post('/pet/:petId/apply', authenticate, accessControl.authenticated, createApplication);
 
-// Get all applications (admin and rescue users only)
-router.get('/', authenticate, accessControl.adminOrRescue, getAllApplications);
+// Get applications (allow any authenticated user; controller will scope results)
+router.get('/', authenticate, accessControl.authenticated, getAllApplications);
 
 // VULNERABILITY: Public Applications Viewing
 // Applications can be viewed without being logged in - no authentication required
