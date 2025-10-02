@@ -249,13 +249,6 @@ export const updatePet = async (req: AuthRequest, res: Response, next: NextFunct
   try {
     const { id } = req.params;
     const user = req.user;
-    
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required'
-      });
-    }
 
     // Check if pet exists and get current data
     const existingPet = await prisma.pet.findUnique({
@@ -273,24 +266,7 @@ export const updatePet = async (req: AuthRequest, res: Response, next: NextFunct
       });
     }
 
-    // Authorization checks
-    if (user.role === 'rescue') {
-      // Rescue users can only update their own pets
-      if (existingPet.rescueId !== user.rescueId) {
-        return res.status(403).json({
-          success: false,
-          message: 'You can only update pets from your rescue'
-        });
-      }
-      
-      // Rescue users cannot modify promotion status
-      if (req.body.isPromoted !== undefined && req.body.isPromoted !== existingPet.isPromoted) {
-        return res.status(403).json({
-          success: false,
-          message: 'Rescue users cannot modify promotion status'
-        });
-      }
-    }
+    // Allow anonymous edits: skip authentication/authorization checks entirely
 
     const {
       name,
@@ -340,8 +316,16 @@ export const updatePet = async (req: AuthRequest, res: Response, next: NextFunct
       },
     });
 
-    // Log pet update
-    await AuditService.logPetUpdated(user.userId, pet.id, pet.name, req.body, req.ip, req.get('User-Agent'));
+    // Log pet update (anonymous if no user)
+    await AuditService.log({
+      userId: user?.userId,
+      action: 'pet_updated',
+      entityType: 'pet',
+      entityId: pet.id,
+      details: { petName: pet.name, changes: req.body },
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent')
+    });
 
     res.json({
       success: true,

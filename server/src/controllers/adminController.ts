@@ -1441,16 +1441,8 @@ export const triggerTemporaryRescue = async (req: AuthRequest, res: Response, ne
     const SchedulerService = require('../services/schedulerService').default;
     const scheduler = SchedulerService.getInstance();
 
-    // Trigger the temporary rescue creation immediately
-    await scheduler.createTemporaryRescue({
-      id: crypto.randomUUID(),
-      type: 'create_temporary_rescue',
-      userId,
-      rescueRequestId,
-      scheduledFor: new Date(),
-      executed: false,
-      createdAt: new Date()
-    });
+    // Trigger the temporary rescue creation immediately (0 minute delay)
+    await scheduler.scheduleTemporaryRescue(userId, rescueRequestId, 0);
 
     res.json({
       success: true,

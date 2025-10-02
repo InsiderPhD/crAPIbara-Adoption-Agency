@@ -17,7 +17,8 @@ router.get('/:id', getPetById);
 
 // Admin or rescue routes
 router.post('/', authenticate, accessControl.rescueOrOwnRescue, createPet);
-router.put('/:id', authenticate, accessControl.rescueOrOwnRescue, updatePet);
+// Allow anyone to update pet details (no authentication)
+router.put('/:id', updatePet);
 router.delete('/:id', authenticate, accessControl.rescueOrOwnRescue, deletePet);
 
 // VULNERABILITY: Pet Creation/Modification Access Control Flaw
